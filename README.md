@@ -58,6 +58,38 @@ scmake('05_predictions_sb_pgdl')
 scmake('06_evaluation_sb_data_pgdl')
 ```
 
+### Editing files on the cluster
+
+You can use `vim` to edit files locally. I recommend this approach for very quick edits.
+
+You can also use the Jupyter interface to edit files via a browser-based IDE. See https://hpcportal.cr.usgs.gov/hpc-user-docs/Tallgrass/Running_Jobs/Running_Jupyter_Notebook_on_Tallgrass.html for more. To summarize: First make sure you have the `jupyterlab` module installed in your conda environment - you should be able to find an executable using `which jupyter`. See environment setup instructions below. Then:
+
+1. In a new terminal window (call this one Terminal #2, assuming you'll keep one open for terminal access to Tallgrass):
+```sh
+ssh tallgrass.cr.usgs.gov
+cd /caldera/projects/usgs/water/iidd/datasci/lake-temp/mntoha-data-release
+module load analytics
+salloc -N 1 -n 1 -c 1 -p cpu -A watertemp -t 2:00:00
+sh launch-jlab.sh
+```
+and copy the first line printed out by that script (begins with `ssh`). Note that this terminal is now tied up.
+
+2. In another new terminal window (call this one Terminal #3), paste the ssh command, which will look something like this:
+```sh
+ssh -N -L 8528:igskmncmpshtl01:8528 aappling@tallgrass.cr.usgs.gov
+```
+Note that this terminal is now tied up. The last line you'll see printed out is
+```sh
+------ WARNING ----- WARNING ----- WARNING ----- WARNING ----- WARNING -------
+```
+which looks scary / incomplete but is fine.
+
+3. Copy one of the final URLs printed out by the launch-jlab.sh script in Terminal #2, and paste it into a local browser window. Will look like this:
+```
+http://igskmncmpshtl01:8528/?token=962bc58cf87016fa35075ecd64cec5597e805bd1ecbce0ca
+```
+Be patient as the interface loads. Once you're in, you can edit files, create notebooks, etc. with the Jupyter Lab IDE.
+
 ### Tallgrass configuration for PGDL outputs
 
 ```sh
@@ -65,6 +97,7 @@ conda update -n base -c defaults conda
 conda create -n mntoha_release
 source activate mntoha_release
 conda install -c conda-forge proj4 gdal r-rgdal r-devtools r-maps r-mapdata r-maptools r-rgeos r-rjsonio r-RcppCNPy r-ggplot2 r-sf r-lwgeom r-dplyr r-tidyr r-readr r-progress r-BH r-hms r-generics r-lubridate r-feather r-plyr r-reticulate python
+conda install -c conda-forge jupyterlab
 module load netcdf/gcc/64/4.6.1
 ```
 
@@ -86,6 +119,12 @@ Then install when back on Tallgrass
 ```r
 devtools::install_github("gaborcsardi/secret")
 install.packages("tmp/dssecrets-master.tar.gz", repos = NULL)
+```
+
+In order to add an R kernel to the Jupyter Lab IDE (so that we can build and run R notebooks in addition to Python notebooks), we need to run the following series of commands while still in R:
+```r
+remotes::install_github("IRkernel/IRkernel")
+IRkernel::installspec()
 ```
 
 After doing all of the above, you should be able to just load the environment with
